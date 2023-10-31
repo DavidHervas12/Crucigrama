@@ -4,11 +4,12 @@ import { Text, View, TouchableOpacity, StyleSheet } from "react-native";
 
 export default function Screen2() {
   const board = () => {
+    
     let array1 = [];
     for (let i = 0; i < 12; i++) {
       let array2 = [];
       for (let j = 0; j < 10; j++) {
-        array2.push(j);
+        array2.push(String.fromCharCode(Math.floor(Math.random() * 25 + 97)));
       }
       array1.push(array2);
     }
@@ -34,13 +35,13 @@ export default function Screen2() {
                 {board().map((row, i) => {
                   return (
                     <View key={i.toString()}>
-                      {row.map((cell, j) => {
+                      {row.map((letter, j) => {
                         return (
                           <TouchableOpacity
                             key={j.toString()}
                             style={styles.cell}
                           >
-                            <Text style={{ fontSize: 15 }}></Text>
+                            <Text style={{ fontSize: 15 }}>{letter}</Text>
                           </TouchableOpacity>
                         );
                       })}
