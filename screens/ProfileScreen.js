@@ -89,7 +89,7 @@ const ProfileScreen = () => {
               </View>
             )}
           />
-        </View>
+        </View> 
 
         <TouchableOpacity onPress={openModifyScreen} style={styles.editButton}>
           <Image
