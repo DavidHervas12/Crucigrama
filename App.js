@@ -1,33 +1,24 @@
-import { Text, View, StyleSheet, Image, Button, TextInput } from "react-native";
+// App.js
+import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import Screen1 from "./src/Screen1";
-import Screen2 from "./src/Screen2";
+import { createStackNavigator } from "@react-navigation/stack";
+import MainNavigator from "./screens/MainNavigator";
+import LoginScreen from "./screens/LoginScreen";
+import { ScreensProvider } from "./screens/ScreenContext";
 
-const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
 
-export default function App() {
+const App = () => {
   return (
-    <NavigationContainer>
-      <Tab.Navigator>
-        <Tab.Screen name="Screen1" component={Screen1} />
-        <Tab.Screen name="Screen2" component={Screen2} />
-      </Tab.Navigator>
-    </NavigationContainer>
+    <ScreensProvider>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Login" headerMode="none">
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="MainNavigator" component={MainNavigator} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </ScreensProvider>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#ecf0f1",
-    padding: 8,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: "bold",
-    fontStyle: "italic",
-  },
-});
+export default App;

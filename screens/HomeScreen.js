@@ -1,0 +1,397 @@
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+  Image,
+  FlatList,
+} from "react-native";
+import {
+  useFonts,
+  RobotoMono_400Regular,
+} from "@expo-google-fonts/roboto-mono";
+
+import { search, searchLists } from "../services/services";
+
+const HomeScreen = () => {
+  const [fontsLoaded] = useFonts({
+    RobotoMono: RobotoMono_400Regular,
+  });
+
+  const [activeTab, setActiveTab] = useState("lists");
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedList, setSelectedList] = useState(null);
+  const [videosData, setVideosData] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [listsData, setListsData] = useState([]);
+
+  const handleSearch = async () => {
+    try {
+      console.log("hola");
+      const responseData = await search(searchQuery);
+      const videos = responseData || [];
+
+      const combinedVideosData = [
+        ...responseData.youtube.items.map((item) => ({
+          id: item.id.videoId,
+          title: item.snippet.title,
+          image: item.snippet.thumbnails.default.url,
+          source: "YouTube",
+          channel: item.snippet.channelTitle, // Agregar el parámetro channel
+        })),
+        ...responseData.vimeo.data.map((item) => ({
+          id: item.link.substring(item.link.lastIndexOf("/") + 1),
+          title: item.name,
+          image: item.pictures.base_link,
+          source: "Vimeo",
+          channel: item.user.name, // Agregar el parámetro channel
+        })),
+        ...responseData.daylimotion.list.map((item) => ({
+          id: item.id,
+          title: item.title,
+          image: item.thumbnail_360_url,
+          source: "Dailymotion",
+          channel:
+            item.owner && item.owner.screenname
+              ? item.owner.screenname
+              : "unknown",
+        })),
+      ];
+
+      console.log(combinedVideosData); // Verificar que los datos combinados sean correctos
+
+      setVideosData(combinedVideosData);
+    } catch (error) {
+      console.error("Error al buscar videos:", error);
+    }
+  };
+
+  const handleListSearch = async () => {
+    try {
+      console.log("hola");
+      const responseData = await searchLists(searchQuery);
+      setListsData(responseData);
+      console.log("Datos de las listas:", listsData);
+    } catch (error) {
+      console.error("Error al buscar listas:", error);
+    }
+  };
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
+  const renderListItem = ({ item }) => (
+    <TouchableOpacity
+      style={styles.listItemContainer}
+      onPress={() => {
+        setModalVisible(true);
+        setSelectedList(item);
+      }}
+    >
+      <View style={styles.listImagesContainer}>
+        {item.videos &&
+          item.videos.map((video, index) => (
+            <Image
+              key={index}
+              source={{ uri: video.thumbnail }} // Corregido aquí para obtener la imagen correcta del item
+              style={styles.listItemImage}
+            />
+          ))}
+      </View>
+      <View style={styles.listItemContent}>
+        <Text style={styles.listItemTitle}>{item.title}</Text>
+        <Text style={styles.actionButtonText}>{item.likes}</Text>
+        {/* <TouchableOpacity style={styles.actionButton}>
+            <Image
+              source={require("../assets/config.png")}
+              style={styles.closeIcon}
+            />
+          </TouchableOpacity>
+        <Text style={styles.actionButtonText}>{item.dislikes}</Text>
+        <TouchableOpacity style={styles.actionButton}>
+            <Image
+              source={require("../assets/config.png")}
+              style={styles.closeIcon}
+            />
+          </TouchableOpacity>
+        <View style={styles.actionButtonsContainer}>
+        </View> */}
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderVideoItem = ({ item }) => (
+    <View style={styles.videoItemContainer}>
+      <Image source={{ uri: item.image }} style={styles.videoItemImage} />
+      <Text style={styles.videoItemText}>{item.title}</Text>
+      <Text style={styles.videoItemText}>{item.channel}</Text>
+      {/* Botón de la cruz */}
+      <TouchableOpacity style={styles.addButton}>
+        <Image source={require("../assets/add.png")} style={styles.closeIcon} />
+      </TouchableOpacity>
+    </View>
+  );
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.textInputContainer}>
+        <Image
+          source={require("../assets/logo.png")}
+          style={styles.iconImage}
+        />
+        <TextInput
+          style={styles.textInput}
+          placeholder="Search..."
+          placeholderTextColor="#888"
+          value={searchQuery}
+          onChangeText={(text) => setSearchQuery(text)}
+        />
+        <TouchableOpacity
+          style={styles.searchButton}
+          onPress={activeTab === "lists" ? handleListSearch : handleSearch}
+        >
+          <Image
+            source={require("../assets/pixelarticons--search.png")}
+            style={styles.searchIcon}
+          />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={[styles.button, activeTab === "lists" && styles.activeButton]}
+          onPress={() => setActiveTab("lists")}
+        >
+          <Text
+            style={[
+              styles.buttonText,
+              activeTab === "lists" && styles.activeButtonText,
+            ]}
+          >
+            Lists
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, activeTab === "videos" && styles.activeButton]}
+          onPress={() => setActiveTab("videos")}
+        >
+          <Text
+            style={[
+              styles.buttonText,
+              activeTab === "videos" && styles.activeButtonText,
+            ]}
+          >
+            Videos
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <FlatList
+        data={activeTab === "lists" ? listsData : videosData}
+        keyExtractor={(item) => item.id}
+        renderItem={activeTab === "lists" ? renderListItem : renderVideoItem}
+      />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "flex-start",
+    alignItems: "center",
+    paddingTop: 50,
+  },
+  textInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#e1e8ee",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "#607FF8",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  iconImage: {
+    width: 24,
+    height: 24,
+    marginRight: 10,
+  },
+  textInput: {
+    flex: 0.8,
+    fontFamily: "RobotoMono",
+    borderRadius: 20,
+    paddingVertical: 10,
+    fontSize: 16,
+    width: 200,
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    marginTop: 10,
+  },
+  button: {
+    backgroundColor: "white",
+    borderWidth: 1,
+    borderColor: "#607FF8",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginHorizontal: 5,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  activeButton: {
+    backgroundColor: "#607FF8",
+    borderColor: "#607FF8",
+  },
+  buttonText: {
+    fontFamily: "RobotoMono",
+    color: "#607FF8",
+    fontSize: 16,
+    textAlign: "center",
+  },
+  activeButtonText: {
+    color: "white",
+  },
+  listItemContainer: {
+    flexDirection: "column",
+    alignItems: "center",
+    padding: 10,
+    marginBottom: 10,
+    backgroundColor: "#ecf0f1",
+    borderRadius: 10,
+  },
+  listImagesContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: 5,
+  },
+  listItemImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    marginHorizontal: 5,
+  },
+  listItemContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%", // Ajustar el ancho para que ocupe todo el contenedor
+    paddingHorizontal: 10,
+  },
+  listItemTitle: {
+    fontFamily: "RobotoMono",
+    fontSize: 16,
+    color: "#607FF8", // Color azul para el título
+    flex: 1, // Para que ocupe el espacio disponible
+  },
+  actionButtonsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  actionButton: {
+    backgroundColor: "white",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#607FF8", // Borde azul
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginLeft: 10,
+  },
+  actionButtonText: {
+    fontFamily: "RobotoMono",
+    color: "#607FF8", // Texto azul
+    fontSize: 14,
+  },
+  videoItemContainer: {
+    flexDirection: "column",
+    alignItems: "center",
+    padding: 20,
+    margin: 20,
+    borderColor: "#607FF8",
+    borderWidth: 1,
+    backgroundColor: "#ecf0f1",
+    borderRadius: 10,
+    shadowColor: "#607FF8",
+    shadowOffset: {
+      width: 10,
+      height: 10, // Ajusta la altura para que la sombra sea más grande verticalmente
+    },
+    shadowOpacity: 0.8, // Ajusta la opacidad de la sombra
+    shadowRadius: 20, // Ajusta el radio de la difuminación de la sombra
+    elevation: 10,
+  },
+  videoItemImage: {
+    width: 300,
+    height: 200,
+    marginBottom: 15,
+    borderRadius: 10,
+    marginBottom: 5,
+  },
+  videoItemText: {
+    fontFamily: "RobotoMono",
+    fontSize: 15,
+    color: "#607FF8",
+    marginBottom: 10,
+  },
+  searchButton: {
+    backgroundColor: "#607FF8",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    marginLeft: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  searchIcon: {
+    width: 20,
+    height: 20,
+    tintColor: "#ffffff",
+  },
+  addButton: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    backgroundColor: "white",
+    borderRadius: 50,
+    borderWidth: 1,
+    borderColor: "#607FF8",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  closeIcon: {
+    width: 24,
+    height: 24,
+  },
+});
+
+export default HomeScreen;

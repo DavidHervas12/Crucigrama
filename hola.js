@@ -1,20 +1,15 @@
-const words = ["software", "developer", "system", "app", "phone", "mobile"]
-let containsAll = false;
+// setInterval(() => {
+//   console.log("hola");
+// }, 1000);
+// setTimeout(() => {
+//   console.log("adios");
+// }, 3000);
+
+const hola = ["hola", "adios"];
+
+console.log(hola);
 
 
 
-const board = () => {
-    let array1 = [];
-    for (let i = 0; i < 12; i++) {
-      let array2 = [];
-      for (let j = 0; j < 10; j++) {
-        array2.push(String.fromCharCode(Math.floor(Math.random() * 25 + 97)));
-      }
-      array1.push(array2);
-    }
-    return array1;
-  
-};
+data[0]. meanings[0].synonyms[0];
 
-
-console.log(board.join());
