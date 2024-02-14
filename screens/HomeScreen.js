@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
-  FlatList,
+  FlatList, 
 } from "react-native";
 import {
   useFonts,
