@@ -70,9 +70,9 @@ const fetchData = async () => {
   }
 };
 
-const actualizarUsuario = async (id, datosActualizados) => {
+const actualizarUsuario = async (datosActualizados) => {
   try {
-    const response = await fetch(`http://3.217.102.239:8080/OmniStream/modifyUser/${id}`, { // Asegúrate de usar el endpoint correcto
+    const response = await fetch(`http://3.217.102.239:8080/OmniStream/modifyUser`, { // Asegúrate de usar el endpoint correcto
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -82,6 +82,7 @@ const actualizarUsuario = async (id, datosActualizados) => {
 
     const responseData = await response.json();
     console.log('Usuario actualizado:', responseData);
+    console.log(response)
   } catch (error) {
     console.error('Error al actualizar usuario:', error);
   }
@@ -162,18 +163,18 @@ const searchLists = async (searchQuery) => {
   }
 };
 
-const guardarVideo = async (listsData) => {
+const addVideo = async (video) => {
   try {
-    console.log('Sending data to server:', listsData);
+    console.log('Sending data to server:', video);
 
     const response = await fetch(
-      'http://3.217.102.239:8080/OmniStream/createVideo',
+      'http://3.217.102.239:8080/OmniStream/addVideo',
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(listsData),
+        body: JSON.stringify(video),
       }
     );
 
@@ -191,4 +192,33 @@ const guardarVideo = async (listsData) => {
   }
 };
 
-export { fetchData, actualizarUsuario, eliminarUsuario, createLists, search, enviarDatos, iniciarSesion, searchLists };
+const getUserLists = async (userId) => {
+  try {
+    const response = await fetch(
+      `http://3.217.102.239:8080/OmniStream/getUserLists?id=${userId}`
+    );
+    const responseData = await response.json();
+    console.log('Videos encontrados:', responseData);
+    return responseData;
+  } catch (error) {
+    console.error('Error al buscar listas:', error);
+    throw error;
+  }
+};
+
+const getVideoLists = async (listId) => {
+  try {
+    const response = await fetch(
+      `http://3.217.102.239:8080/OmniStream/getVideosInList?id=${listId}`
+    );
+    const responseData = await response.json();
+    console.log('Videos encontrados:', responseData);
+    return responseData;
+  } catch (error) {
+    console.error('Error al buscar listas:', error);
+    throw error;
+  }
+};
+
+
+export { fetchData, actualizarUsuario, eliminarUsuario, createLists, search, enviarDatos, iniciarSesion, searchLists, getVideoLists };

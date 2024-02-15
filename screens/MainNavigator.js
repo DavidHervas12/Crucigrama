@@ -74,17 +74,29 @@ const getTabBarIcon = (route, focused) => {
   let iconName;
 
   if (route.name === 'Profile') {
-    iconName = focused ? require('../assets/pixelarticons--user.png') : require('../assets/pixelarticons--user.png');
+    iconName = focused ? require('../assets/user_icon.png') : require('../assets/user_icon.png');
   } else if (route.name === 'Home') {
-    iconName = focused ? require('../assets/pixelarticons--home.png') : require('../assets/pixelarticons--home.png');
+    iconName = focused ? require('../assets/homeIcon.png') : require('../assets/homeIcon.png');
   } else if (route.name === 'Config') {
-    iconName = focused ? require('../assets/config.png') : require('../assets/config.png');
+    iconName = focused ? require('../assets/settingsIcon.png') : require('../assets/settingsIcon.png');
   } else if (route.name === 'Notifications') {
     iconName = focused ? require('../assets/inbox.png') : require('../assets/inbox.png');
   }
 
-  return <Image source={iconName} style={{ width: 24, height: 24 }} />;
+  return (
+    <Image
+      source={iconName}
+      style={{
+        width: 24,
+        height: 24,
+        // Apply additional styling for the selected icon
+        transform: focused ? [{ translateY: -5 }] : [], // Adjust translateY value as needed
+        elevation: focused ? 5 : 0, // Add elevation for the selected icon
+      }}
+    />
+  );
 };
+
 
 const MainNavigator = () => {
   const [fontsLoaded] = useFonts({
@@ -100,22 +112,43 @@ const MainNavigator = () => {
       <Tab.Navigator
         initialRouteName="Home"
         screenOptions={({ route }) => ({
+          inactiveTintColor: 'gray',
+          tabBarStyle: { backgroundColor: '#607FF8', alignItems: 'center', bottom: -10, height: 60},
+          tabBarLabelStyle: { fontFamily: 'RobotoMono' },
           tabBarIcon: ({ focused, color, size }) => {
             return getTabBarIcon(route, focused);
           },
           headerShown: false,
         })}
-        tabBarOptions={{
-          activeTintColor: 'tomato',
-          inactiveTintColor: 'gray',
-          tabBarStyle: { backgroundColor: 'blue' },
-          tabBarLabelStyle: { fontFamily: 'RobotoMono' },
-        }}
       >
-        <Tab.Screen name="Profile" component={ProfileStack} />
-        <Tab.Screen name="Home" component={HomeStack} />
-        <Tab.Screen name="Config" component={ConfigStack} />
-        <Tab.Screen name="Notifications" component={NotifsStack} />
+        <Tab.Screen
+          name="Profile"
+          component={ProfileStack}
+          options={{
+            tabBarLabel: '',
+          }}
+        />
+        <Tab.Screen
+          name="Home"
+          component={HomeStack}
+          options={{
+            tabBarLabel: '',
+          }}
+        />
+        <Tab.Screen
+          name="Config"
+          component={ConfigStack}
+          options={{
+            tabBarLabel: '',
+          }}
+        />
+        <Tab.Screen
+          name="Notifications"
+          component={NotifsStack}
+          options={{
+            tabBarLabel: '',
+          }}
+        />
       </Tab.Navigator>
     </NavigationContainer>
   );

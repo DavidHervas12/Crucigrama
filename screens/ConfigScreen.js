@@ -1,11 +1,21 @@
-import React, { useState } from 'react';
-import { View, Text, Switch, StyleSheet, TouchableOpacity, Modal } from 'react-native';
-import HelpScreen from './HelpScreen';
+import React, { useState, useContext } from "react";
+import {
+  View,
+  Text,
+  Switch,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+} from "react-native";
+import HelpScreen from "./HelpScreen";
+import ScreensContext from "./ScreenContext";
 
+// cambiar texto en invitado
+//
 const ConfigScreen = ({ navigation }) => {
   const [darkMode, setDarkMode] = useState(false);
-  const [language, setLanguage] = useState('English');
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [language, setLanguage] = useState("English");
+  const { setUser, setIsLoggedIn } = useContext(ScreensContext);
   const [isHelpModalVisible, setIsHelpModalVisible] = useState(false);
 
   const toggleDarkMode = () => {
@@ -13,7 +23,9 @@ const ConfigScreen = ({ navigation }) => {
   };
 
   const toggleLanguage = () => {
-    setLanguage((prevLanguage) => (prevLanguage === 'English' ? 'Spanish' : 'English'));
+    setLanguage((prevLanguage) =>
+      prevLanguage === "English" ? "Spanish" : "English"
+    );
   };
 
   const handleHelp = () => {
@@ -22,7 +34,8 @@ const ConfigScreen = ({ navigation }) => {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    navigation.replace('LoginScreen');
+    setUser(null);
+    navigation.navigate("Login");
   };
 
   const closeHelpModal = () => {
@@ -38,18 +51,18 @@ const ConfigScreen = ({ navigation }) => {
         <Switch
           value={darkMode}
           onValueChange={toggleDarkMode}
-          thumbColor={darkMode ? '#607FF8' : '#ffffff'}
-          trackColor={{ false: '#d3d3d3', true: '#393e46' }}
+          thumbColor={darkMode ? "#607FF8" : "#ffffff"}
+          trackColor={{ false: "#d3d3d3", true: "#393e46" }}
         />
       </View>
 
       <View style={styles.switchContainer}>
         <Text style={styles.switchLabel}>Language: {language}</Text>
         <Switch
-          value={language === 'Spanish'}
+          value={language === "Spanish"}
           onValueChange={toggleLanguage}
-          thumbColor={'#607FF8'}
-          trackColor={{ false: '#d3d3d3', true: '#393e46' }}
+          thumbColor={"#607FF8"}
+          trackColor={{ false: "#d3d3d3", true: "#393e46" }}
         />
       </View>
 
@@ -62,7 +75,12 @@ const ConfigScreen = ({ navigation }) => {
       </TouchableOpacity>
 
       {/* Modal para la pantalla de ayuda */}
-      <Modal visible={isHelpModalVisible} animationType="slide" transparent={true} onRequestClose={closeHelpModal}>
+      <Modal
+        visible={isHelpModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={closeHelpModal}
+      >
         <HelpScreen onCloseModal={closeHelpModal} />
       </Modal>
     </View>
@@ -72,39 +90,39 @@ const ConfigScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
+    justifyContent: "flex-start",
+    alignItems: "center",
     padding: 20,
     marginTop: 70,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 20,
-    textAlign: 'left',
+    textAlign: "left",
   },
   button: {
-    backgroundColor: '#607FF8',
+    backgroundColor: "#607FF8",
     borderRadius: 10,
     padding: 10,
     marginBottom: 20,
   },
   buttonText: {
-    color: '#ffffff',
-    textAlign: 'center',
+    color: "#ffffff",
+    textAlign: "center",
   },
   switchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
     marginBottom: 20,
   },
   switchLabel: {
     fontSize: 16,
   },
   logoutButton: {
-    backgroundColor: '#E74C3C',
+    backgroundColor: "#E74C3C",
     borderRadius: 10,
     padding: 10,
   },

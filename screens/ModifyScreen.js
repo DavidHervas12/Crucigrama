@@ -21,12 +21,11 @@ export default function ModifyScreen({ onCloseModal, isVisible }) {
   const [image, setImage] = useState(null);
   const [usernameError, setUsernameError] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
   const defaultImage = require("../assets/UserIcon.png");
 
   useEffect(() => {
     chargeUserData();
-
+    console.log(user);
     (async () => {
       const { status } =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -75,13 +74,6 @@ export default function ModifyScreen({ onCloseModal, isVisible }) {
       setEmailError("");
     }
 
-    if (!password) {
-      setPasswordError("Password is required.");
-      return;
-    } else {
-      setPasswordError("");
-    }
-
     const emailRegex = /\S+@\S+\.\S+/;
     if (!emailRegex.test(email)) {
       setEmailError("Please enter a valid email address.");
@@ -90,22 +82,16 @@ export default function ModifyScreen({ onCloseModal, isVisible }) {
       setEmailError("");
     }
 
-    if (password.length < 8) {
-      setPasswordError("Password must be at least 8 characters long.");
-      return;
-    } else {
-      setPasswordError("");
-    }
-
     const updatedData = {
+      id: user.id,
       username: username,
-      password: password,
+      password: user.password,
       email: email,
       profilePicture: image ? image : "defaultProfilePicture",
     };
-
+    console.log(updatedData);
     try {
-      await actualizarUsuario(user.id, updatedData); // Usa el id del usuario del contexto
+      await actualizarUsuario(updatedData); // Usa el id del usuario del contexto
       Alert.alert(
         "Account Updated",
         "Your account has been updated successfully!",
@@ -171,9 +157,6 @@ export default function ModifyScreen({ onCloseModal, isVisible }) {
           {emailError ? (
             <Text style={styles.errorText}>{emailError}</Text>
           ) : null}
-          {passwordError ? (
-            <Text style={styles.errorText}>{passwordError}</Text>
-          ) : null}
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.accountButton}
@@ -211,11 +194,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginVertical: 10,
     padding: 35,
-  },
-  passwordText: {
-    color: "#607FF8",
-    marginVertical: 5,
-    padding: 5,
   },
   emailText: {
     color: "#607FF8",

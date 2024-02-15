@@ -42,11 +42,12 @@ const LoginScreen = ({ navigation }) => {
     try {
       const userData = { username, password };
       const loginResponse = await iniciarSesion(userData);
-
+      const objectResponse = JSON.parse(loginResponse);
       console.log("Login successful:", loginResponse);
-      setUser(loginResponse);
+
+      setUser(objectResponse);
       setIsLoggedIn(true);
-      navigation.replace("MainNavigator");
+      navigation.navigate("MainNavigator");
 
       //TODO controlar si el fallo está en el nombre de usuario o en la contraseña.
     } catch (error) {

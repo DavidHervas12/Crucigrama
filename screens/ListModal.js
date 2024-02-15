@@ -1,18 +1,38 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, FlatList, Modal } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, FlatList, Modal, Linking } from 'react-native';
+import { getVideoLists } from "../services/services";
 
 const ListModal = ({ visible, onClose, selectedList }) => {
-const renderModalItem = ({ item }) => (
-  <View style={styles.modalItemContainer}>
-    <Text style={styles.listName}>{item.text}</Text>
-    {item.images.map((image, index) => (
-      <View key={index} style={styles.itemRow}>
-        <Image source={image} style={styles.modalItemImage} />
-        <Text style={styles.modalItemText}>{`Item ${index + 1}`}</Text>
+  const [videos, setVideos] = useState([]);
+
+  useEffect(() => {
+    const fetchVideos = async () => {
+      try {
+        if (selectedList) {
+          const responseData = await getVideoLists(selectedList.id);
+          setVideos(responseData);
+        }
+      } catch (error) {
+        console.error('Error fetching videos:', error);
+      }
+    };
+
+    fetchVideos();
+  }, [selectedList]);
+
+  const handleVideoPress = (link) => {
+    Linking.openURL(link);
+  };
+
+  const renderModalItem = ({ item }) => (
+    <TouchableOpacity onPress={() => handleVideoPress(item.link)}>
+      <View style={styles.modalItemContainer}>
+        <Text style={styles.listName}>{item.title}</Text>
+        <Image source={{ uri: item.thumbnail }} style={styles.modalItemImage} />
+        <Text style={styles.modalItemText}>{item.channel}</Text>
       </View>
-    ))}
-  </View>
-);
+    </TouchableOpacity>
+  );
 
   return (
     <Modal
@@ -23,7 +43,7 @@ const renderModalItem = ({ item }) => (
     >
       <View style={styles.modalContainer}>
         <FlatList
-          data={selectedList ? [selectedList] : []}
+          data={videos}
           keyExtractor={(item) => item.id}
           renderItem={renderModalItem}
           contentContainerStyle={styles.flatListContainer}
@@ -45,9 +65,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 100,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-    flatListContainer: {
+  flatListContainer: {
     flexGrow: 1,
     alignItems: 'center',
   },
@@ -55,18 +75,13 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
     padding: 10,
+    marginTop: 15,
     marginBottom: 10,
     backgroundColor: '#ecf0f1',
     borderRadius: 10,
     width: 350,
-    height: 620,
+    height: 200,
   },
-itemRow: {
-  flexDirection: 'row', 
-  alignItems: 'center',
-  marginBottom: 10,
-},
-
   modalItemImage: {
     width: 80,
     height: 80,
@@ -91,7 +106,7 @@ itemRow: {
     fontSize: 16,
     textAlign: 'center',
   },
-    listName: {
+  listName: {
     fontFamily: 'RobotoMono',
     fontSize: 20,
     fontWeight: 'bold',
@@ -100,3 +115,5 @@ itemRow: {
 });
 
 export default ListModal;
+
+

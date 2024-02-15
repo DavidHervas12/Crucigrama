@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -19,8 +19,11 @@ const ProfileScreen = () => {
   const [fontsLoaded] = useFonts({
     RobotoMono: RobotoMono_400Regular,
   });
-
   const [isModifyScreenVisible, setIsModifyScreenVisible] = useState(false);
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   const openModifyScreen = () => {
     setIsModifyScreenVisible(true);
@@ -56,7 +59,7 @@ const ProfileScreen = () => {
       />
       <View style={styles.userInfoContainer}>
         <View>
-          <Text style={styles.userName}>{user.name}</Text>
+          <Text style={styles.userName}>{user.username}</Text>
           <Text style={styles.userEmail}>{user.email}</Text>
         </View>
         <Text style={styles.sectionTitle}>Lists</Text>
@@ -89,7 +92,7 @@ const ProfileScreen = () => {
               </View>
             )}
           />
-        </View> 
+        </View>
 
         <TouchableOpacity onPress={openModifyScreen} style={styles.editButton}>
           <Image
@@ -106,9 +109,11 @@ const ProfileScreen = () => {
         )}
       </View>
     </View>
-  ) : (<View style={styles.container}>
-    <Text>You need to be logged in to access this screen</Text>
-  </View>)
+  ) : (
+    <View style={styles.container}>
+      <Text>You need to be logged in to access this screen</Text>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({

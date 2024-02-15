@@ -6,26 +6,31 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
-  FlatList, 
+  FlatList,
+  Linking 
 } from "react-native";
 import {
   useFonts,
   RobotoMono_400Regular,
 } from "@expo-google-fonts/roboto-mono";
 
-import { search, searchLists } from "../services/services";
+import { search, searchLists, getUserLists, getVideoLists } from "../services/services";
+import AddVideoModal from "./AddVideoModal";
+import ListModal from "./ListModal";
 
 const HomeScreen = () => {
   const [fontsLoaded] = useFonts({
     RobotoMono: RobotoMono_400Regular,
   });
-
   const [activeTab, setActiveTab] = useState("lists");
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalListVisible, setModalListVisible] = useState(false);
+  const [addVideoModalVisible, setAddVideoModalVisible] = useState(false);
   const [selectedList, setSelectedList] = useState(null);
   const [videosData, setVideosData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [listsData, setListsData] = useState([]);
+  const [availableLists, setAvailableLists] = useState([]);
+  const [videoToAdd, setVideoToAdd] = useState(null);
 
   const handleSearch = async () => {
     try {
@@ -60,7 +65,7 @@ const HomeScreen = () => {
         })),
       ];
 
-      console.log(combinedVideosData); // Verificar que los datos combinados sean correctos
+      console.log(combinedVideosData);
 
       setVideosData(combinedVideosData);
     } catch (error) {
@@ -68,6 +73,46 @@ const HomeScreen = () => {
     }
   };
 
+  const renderVideoItem = ({ item }) => (
+    <TouchableOpacity
+      style={styles.videoItemContainer}
+      onPress={() => handleVideoPress(item.id, item.source)} // Cambia item.link a item.id
+    >
+      <Image source={{ uri: item.image }} style={styles.videoItemImage} />
+      <Text style={styles.videoItemText}>{item.title}</Text>
+      <Text style={styles.videoItemText}>{item.channel}</Text>
+      {/* Botón de la cruz */}
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => openAddVideoModal(item)}
+      >
+        <Image source={require("../assets/add.png")} style={styles.closeIcon} />
+      </TouchableOpacity>
+    </TouchableOpacity>
+  );
+  
+  
+  const handleVideoPress = (id, source) => {
+    if (id) {
+      let videoLink;
+      if (source === 'YouTube') {
+        videoLink = `https://www.youtube.com/watch?v=${id}`;
+      } else if (source === 'Vimeo') {
+        videoLink = `https://vimeo.com/${id}`;
+      } else if (source === 'Dailymotion') {
+        videoLink = `https://www.dailymotion.com/video/${id}`;
+      } else {
+        console.error("Fuente de video desconocida:", source);
+        return;
+      }
+      Linking.openURL(videoLink).catch((err) =>
+        console.error("Error al abrir el enlace:", err)
+      );
+    } else {
+      console.error("El ID del video es inválido:", id);
+    }
+  };  
+  
   const handleListSearch = async () => {
     try {
       console.log("hola");
@@ -79,18 +124,43 @@ const HomeScreen = () => {
     }
   };
 
+  const getUserListsHome = async () => {
+    const responseData = await getUserLists(searchQuery);
+    const lists = responseData || [];
+
+    setAvailableLists(lists);
+  };
+
+  const openAddVideoModal = (video) => {
+    getUserListsHome();
+    setVideoToAdd(video);
+    setAddVideoModalVisible(true);
+  };
+
+  const closeAddVideoModal = () => {
+    setAddVideoModalVisible(false);
+  };
+
+  const openListModal = async (list) => {
+    setSelectedList(list);
+    const videosInList = await getVideoLists(list.id);
+    setSelectedList({ ...list, videos: videosInList });
+    setModalListVisible(true);
+  };
+
+  const closeListModal = () => {
+    setModalListVisible(false); // Cambiar de addVideoModalVisible a modalListVisible
+  };  
+
   if (!fontsLoaded) {
     return null;
   }
 
   const renderListItem = ({ item }) => (
     <TouchableOpacity
-      style={styles.listItemContainer}
-      onPress={() => {
-        setModalVisible(true);
-        setSelectedList(item);
-      }}
-    >
+    style={styles.listItemContainer}
+    onPress={() => openListModal(item)}
+  >
       <View style={styles.listImagesContainer}>
         {item.videos &&
           item.videos.map((video, index) => (
@@ -103,36 +173,25 @@ const HomeScreen = () => {
       </View>
       <View style={styles.listItemContent}>
         <Text style={styles.listItemTitle}>{item.title}</Text>
-        <Text style={styles.actionButtonText}>{item.likes}</Text>
-        {/* <TouchableOpacity style={styles.actionButton}>
+        <View style={styles.actionButtonsContainer}>
+        <TouchableOpacity style={styles.actionButton}>
             <Image
-              source={require("../assets/config.png")}
+              source={require("../assets/dislikeIcon.png")}
               style={styles.closeIcon}
             />
           </TouchableOpacity>
         <Text style={styles.actionButtonText}>{item.dislikes}</Text>
         <TouchableOpacity style={styles.actionButton}>
             <Image
-              source={require("../assets/config.png")}
+              source={require("../assets/likeIcon.png")}
               style={styles.closeIcon}
             />
           </TouchableOpacity>
-        <View style={styles.actionButtonsContainer}>
-        </View> */}
+          <Text style={styles.actionButtonText}>{item.likes}</Text>
+        
+        </View> 
       </View>
     </TouchableOpacity>
-  );
-
-  const renderVideoItem = ({ item }) => (
-    <View style={styles.videoItemContainer}>
-      <Image source={{ uri: item.image }} style={styles.videoItemImage} />
-      <Text style={styles.videoItemText}>{item.title}</Text>
-      <Text style={styles.videoItemText}>{item.channel}</Text>
-      {/* Botón de la cruz */}
-      <TouchableOpacity style={styles.addButton}>
-        <Image source={require("../assets/add.png")} style={styles.closeIcon} />
-      </TouchableOpacity>
-    </View>
   );
 
   return (
@@ -154,7 +213,7 @@ const HomeScreen = () => {
           onPress={activeTab === "lists" ? handleListSearch : handleSearch}
         >
           <Image
-            source={require("../assets/pixelarticons--search.png")}
+            source={require("../assets/searchIcon.png")}
             style={styles.searchIcon}
           />
         </TouchableOpacity>
@@ -192,6 +251,20 @@ const HomeScreen = () => {
         data={activeTab === "lists" ? listsData : videosData}
         keyExtractor={(item) => item.id}
         renderItem={activeTab === "lists" ? renderListItem : renderVideoItem}
+      />
+
+      {addVideoModalVisible && (
+        <AddVideoModal
+          modalVisible={addVideoModalVisible}
+          onClose={closeAddVideoModal}
+          video={videoToAdd}
+          availableLists={availableLists}
+        />
+      )}
+      <ListModal
+        visible={modalListVisible}
+        onClose={closeListModal}
+        selectedList={selectedList}
       />
     </View>
   );
@@ -293,7 +366,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    width: "100%", // Ajustar el ancho para que ocupe todo el contenedor
+    width: "70%", // Ajustar el ancho para que ocupe todo el contenedor
     paddingHorizontal: 10,
   },
   listItemTitle: {
@@ -305,20 +378,25 @@ const styles = StyleSheet.create({
   actionButtonsContainer: {
     flexDirection: "row",
     alignItems: "center",
+    borderColor: "Black",
+    borderWidth: 1, // Añade un borde alrededor de la zona de los iconos y el texto
+    borderRadius: 5, // Borde redondeado
+    padding: 5, // Añade un espacio interno para separar el borde del contenido
   },
   actionButton: {
     backgroundColor: "white",
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#607FF8", // Borde azul
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    marginLeft: 10,
+    paddingHorizontal: 5, // Reduce el espacio horizontal dentro del botón
+    paddingVertical: 2, // Reduce el espacio vertical dentro del botón
+    marginLeft: 5,
   },
   actionButtonText: {
     fontFamily: "RobotoMono",
     color: "#607FF8", // Texto azul
-    fontSize: 14,
+    fontSize: 12,
+    marginLeft: 5,
   },
   videoItemContainer: {
     flexDirection: "column",
