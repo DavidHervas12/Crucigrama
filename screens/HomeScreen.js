@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   Text,
@@ -7,21 +7,31 @@ import {
   TextInput,
   Image,
   FlatList,
-  Linking 
+  Linking,
 } from "react-native";
 import {
   useFonts,
   RobotoMono_400Regular,
 } from "@expo-google-fonts/roboto-mono";
 
-import { search, searchLists, getUserLists, getVideoLists } from "../services/services";
+import {
+  search,
+  searchLists,
+  getUserLists,
+  getVideoLists,
+  createLists,
+  addVideoToList,
+} from "../services/services";
 import AddVideoModal from "./AddVideoModal";
 import ListModal from "./ListModal";
+import ScreensContext from "./ScreenContext";
+import { SaveList } from "../services/services";
 
 const HomeScreen = () => {
   const [fontsLoaded] = useFonts({
     RobotoMono: RobotoMono_400Regular,
   });
+  const { user } = useContext(ScreensContext);
   const [activeTab, setActiveTab] = useState("lists");
   const [modalListVisible, setModalListVisible] = useState(false);
   const [addVideoModalVisible, setAddVideoModalVisible] = useState(false);
@@ -90,16 +100,15 @@ const HomeScreen = () => {
       </TouchableOpacity>
     </TouchableOpacity>
   );
-  
-  
+
   const handleVideoPress = (id, source) => {
     if (id) {
       let videoLink;
-      if (source === 'YouTube') {
+      if (source === "YouTube") {
         videoLink = `https://www.youtube.com/watch?v=${id}`;
-      } else if (source === 'Vimeo') {
+      } else if (source === "Vimeo") {
         videoLink = `https://vimeo.com/${id}`;
-      } else if (source === 'Dailymotion') {
+      } else if (source === "Dailymotion") {
         videoLink = `https://www.dailymotion.com/video/${id}`;
       } else {
         console.error("Fuente de video desconocida:", source);
@@ -111,8 +120,8 @@ const HomeScreen = () => {
     } else {
       console.error("El ID del video es inválido:", id);
     }
-  };  
-  
+  };
+
   const handleListSearch = async () => {
     try {
       console.log("hola");
@@ -125,9 +134,9 @@ const HomeScreen = () => {
   };
 
   const getUserListsHome = async () => {
-    const responseData = await getUserLists(searchQuery);
+    const responseData = await getUserLists(user.id);
     const lists = responseData || [];
-
+    console.log("respuesta userLists" + responseData);
     setAvailableLists(lists);
   };
 
@@ -144,52 +153,77 @@ const HomeScreen = () => {
   const openListModal = async (list) => {
     setSelectedList(list);
     const videosInList = await getVideoLists(list.id);
-    setSelectedList({ ...list, videos: videosInList });
+    // Guardar la lista actualizada con los videos con un nombre diferente
+    const updatedList = { ...list, videos: videosInList };
+    setSelectedList(updatedList); // Actualizar la lista seleccionada
     setModalListVisible(true);
-  };
+  };  
 
   const closeListModal = () => {
     setModalListVisible(false); // Cambiar de addVideoModalVisible a modalListVisible
-  };  
+  };
 
   if (!fontsLoaded) {
     return null;
   }
 
+  const handleSaveList = async () => {
+    try {
+      // Aquí puedes preparar los datos necesarios para la solicitud, como userId y listId
+      const userId = user.id; // Asegúrate de obtener el userId adecuado
+      const listId = selectedList.id; // Asegúrate de obtener el listId adecuado
+
+      // Realiza la solicitud para guardar la lista
+      await SaveList({ userId, listId });
+    } catch (error) {
+      console.error("Error al guardar la lista:", error);
+    }
+  };
+
   const renderListItem = ({ item }) => (
     <TouchableOpacity
-    style={styles.listItemContainer}
-    onPress={() => openListModal(item)}
-  >
+      style={styles.listItemContainer}
+      onPress={() => openListModal(item)}
+    >
       <View style={styles.listImagesContainer}>
         {item.videos &&
-          item.videos.map((video, index) => (
-            <Image
-              key={index}
-              source={{ uri: video.thumbnail }} // Corregido aquí para obtener la imagen correcta del item
-              style={styles.listItemImage}
-            />
-          ))}
+          item.videos
+            .slice(0, 3)
+            .map((video, index) => (
+              <Image
+                key={index}
+                source={{ uri: video.thumbnail }}
+                style={styles.listItemImage}
+              />
+            ))}
       </View>
       <View style={styles.listItemContent}>
         <Text style={styles.listItemTitle}>{item.title}</Text>
         <View style={styles.actionButtonsContainer}>
-        <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity style={styles.actionButton}>
             <Image
               source={require("../assets/dislikeIcon.png")}
-              style={styles.closeIcon}
+              style={styles.closeIconList}
             />
           </TouchableOpacity>
-        <Text style={styles.actionButtonText}>{item.dislikes}</Text>
-        <TouchableOpacity style={styles.actionButton}>
+          <Text style={styles.actionButtonText}>{item.dislikes}</Text>
+          <TouchableOpacity style={styles.actionButton}>
             <Image
               source={require("../assets/likeIcon.png")}
-              style={styles.closeIcon}
+              style={styles.closeIconList}
             />
           </TouchableOpacity>
           <Text style={styles.actionButtonText}>{item.likes}</Text>
-        
-        </View> 
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={handleSaveList}
+          >
+            <Image
+              source={require("../assets/saveIcon.png")}
+              style={styles.closeIconList}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -265,6 +299,7 @@ const HomeScreen = () => {
         visible={modalListVisible}
         onClose={closeListModal}
         selectedList={selectedList}
+        onSaveList={handleSaveList} // Pasar la función handleSaveList como prop
       />
     </View>
   );
@@ -348,8 +383,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 10,
     marginBottom: 10,
+    marginLeft: 1,
+    marginRight: 1,
     backgroundColor: "#ecf0f1",
+    borderColor: "#607FF8",
+    borderWidth: 1,
     borderRadius: 10,
+    shadowColor: "#607FF8",
+    shadowOffset: {
+      width: 10,
+      height: 10, // Ajusta la altura para que la sombra sea más grande verticalmente
+    },
+    shadowOpacity: 0.8, // Ajusta la opacidad de la sombra
+    shadowRadius: 20, // Ajusta el radio de la difuminación de la sombra
+    elevation: 10,
+    width: "88%",
   },
   listImagesContainer: {
     flexDirection: "row",
@@ -357,8 +405,8 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   listItemImage: {
-    width: 100,
-    height: 100,
+    width: 120,
+    height: 80,
     borderRadius: 10,
     marginHorizontal: 5,
   },
@@ -366,7 +414,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    width: "70%", // Ajustar el ancho para que ocupe todo el contenedor
+    width: "95%", // Ajustar el ancho para que ocupe todo el contenedor
     paddingHorizontal: 10,
   },
   listItemTitle: {
@@ -467,8 +515,12 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   closeIcon: {
-    width: 24,
-    height: 24,
+    width: 30,
+    height: 30,
+  },
+  closeIconList: {
+    width: 18,
+    height: 18,
   },
 });
 

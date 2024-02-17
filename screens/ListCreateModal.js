@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, FlatList, Modal, Linking } from 'react-native';
 import { getVideoLists } from "../services/services";
 
-const ListModal = ({ visible, onClose, selectedList, onSaveList  }) => {
+const ListCreateModal = ({ visible, onClose, selectedList }) => {
   const [videos, setVideos] = useState([]);
 
   useEffect(() => {
@@ -24,15 +24,11 @@ const ListModal = ({ visible, onClose, selectedList, onSaveList  }) => {
     Linking.openURL(link);
   };
 
-  const handleSaveListModal = () => {
-    onSaveList(); // Llamar a la función handleSaveList pasada como prop
-  };
-
   const renderModalItem = ({ item }) => (
     <TouchableOpacity onPress={() => handleVideoPress(item.link)}>
       <View style={styles.modalItemContainer}>
         <Text style={styles.listName}>{item.title}</Text>
-        <Image source={{ uri: item.thumbnail }} style={styles.modalItemImage} />
+        <Image source={item.thumbnail ? { uri: item.thumbnail } : require('../assets/videoThumbnail.png')} style={styles.modalItemImage} />
         <Text style={styles.modalItemText}>{item.channel}</Text>
       </View>
     </TouchableOpacity>
@@ -52,16 +48,6 @@ const ListModal = ({ visible, onClose, selectedList, onSaveList  }) => {
           renderItem={renderModalItem}
           contentContainerStyle={styles.flatListContainer}
         />
-        <TouchableOpacity
-          style={styles.saveButton} // Estilo para el botón de guardar
-          onPress={handleSaveListModal} // Manejador de presionado del botón de guardar
-        >
-          <Image
-              source={require("../assets/saveIcon.png")}
-              style={styles.closeIconList}
-            />
-          <Text style={styles.saveButtonText}>Save</Text>
-        </TouchableOpacity>
         <TouchableOpacity
           style={styles.closeButton}
           onPress={onClose}
@@ -126,12 +112,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
   },
-  closeIconList: {
-    width: 18,
-    height: 18,
-  },
 });
 
-export default ListModal;
-
-
+export default ListCreateModal;

@@ -32,7 +32,7 @@ const HomeStack = () => {
       }}
     >
       <Stack.Screen
-        name="Home"
+        name="HomeScreen"  
         component={HomeScreen}
         options={{
           title: 'Buscar',
@@ -46,17 +46,21 @@ const HomeStack = () => {
   );
 };
 
-const ConfigStack = () => {
+const ConfigStack = ({ navigation }) => {
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
       }}
     >
-      <Stack.Screen name="Config" component={ConfigScreen} />
+      <Stack.Screen name="Config">
+        {(props) => <ConfigScreen {...props} mainNavigation={navigation} />}
+      </Stack.Screen>
     </Stack.Navigator>
   );
 };
+
+
 
 const NotifsStack = () => {
   return (
@@ -66,6 +70,20 @@ const NotifsStack = () => {
       }}
     >
       <Stack.Screen name="Notifs" component={NotifsScreen} />
+    </Stack.Navigator>
+  );
+};
+
+const LoginStack = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+<Stack.Screen name="Login">
+  {(props) => <LoginScreen {...props} mainNavigation={navigation} />}
+</Stack.Screen>
     </Stack.Navigator>
   );
 };

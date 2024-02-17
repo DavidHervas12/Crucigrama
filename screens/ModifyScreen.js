@@ -14,8 +14,9 @@ import { Feather } from "@expo/vector-icons";
 import { actualizarUsuario } from "../services/services";
 import ScreensContext from "./ScreenContext";
 
+
 export default function ModifyScreen({ onCloseModal, isVisible }) {
-  const { user } = useContext(ScreensContext); // Accede al contexto
+  const { user } = useContext(ScreensContext);
   const [username, setUsername] = useState(user.username);
   const [email, setEmail] = useState(user.email);
   const [image, setImage] = useState(null);
@@ -25,7 +26,6 @@ export default function ModifyScreen({ onCloseModal, isVisible }) {
 
   useEffect(() => {
     chargeUserData();
-    console.log(user);
     (async () => {
       const { status } =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -41,7 +41,6 @@ export default function ModifyScreen({ onCloseModal, isVisible }) {
   const chargeUserData = () => {
     setUsername(user.username);
     setEmail(user.email);
-    //TODO setImage() hacer lo de base 64
   };
 
   const pickImage = async () => {
@@ -82,16 +81,23 @@ export default function ModifyScreen({ onCloseModal, isVisible }) {
       setEmailError("");
     }
 
+    let profilePictureBase64 = null;
+
+    if (image) {
+      const imageBase64 = await convertImageToBase64(image);
+      profilePictureBase64 = imageBase64;
+    }
+
     const updatedData = {
       id: user.id,
       username: username,
       password: user.password,
       email: email,
-      profilePicture: image ? image : "defaultProfilePicture",
+      profilePicture: profilePictureBase64,
     };
-    console.log(updatedData);
+
     try {
-      await actualizarUsuario(updatedData); // Usa el id del usuario del contexto
+      await actualizarUsuario(updatedData);
       Alert.alert(
         "Account Updated",
         "Your account has been updated successfully!",
@@ -108,6 +114,24 @@ export default function ModifyScreen({ onCloseModal, isVisible }) {
     }
   };
 
+  const convertImageToBase64 = async (imageUri) => {
+    const response = await fetch(imageUri);
+    const blob = await response.blob();
+    const base64String = await convertBlobToBase64(blob);
+    return base64String;
+  };
+
+  const convertBlobToBase64 = (blob) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = () => {
+        resolve(reader.result.split(",")[1]);
+      };
+      reader.readAsDataURL(blob);
+    });
+  };
+
   return (
     <Modal
       animationType="slide"
@@ -120,7 +144,7 @@ export default function ModifyScreen({ onCloseModal, isVisible }) {
         <View style={styles.part2}>
           <View style={{ alignItems: "center" }}>
             <Image
-              source={image ? { uri: image } : defaultImage}
+              source={{ uri: `data:image/jpg;base64,${user.profileImage}` }}
               style={{ width: 110, height: 110 }}
             />
             <TouchableOpacity style={styles.imageContainer} onPress={pickImage}>
@@ -165,7 +189,6 @@ export default function ModifyScreen({ onCloseModal, isVisible }) {
               <Text style={styles.buttonText}>Update Account</Text>
             </TouchableOpacity>
           </View>
-          {/* Nuevo botón para cerrar la pantalla modal */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.closeButton} onPress={onCloseModal}>
               <Text style={styles.buttonText}>Close</Text>

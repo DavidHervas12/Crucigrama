@@ -9,14 +9,18 @@ import {
 } from "react-native";
 import HelpScreen from "./HelpScreen";
 import ScreensContext from "./ScreenContext";
+import { CommonActions } from '@react-navigation/native';
+import MainNavigator from "./MainNavigator";
+
 
 // cambiar texto en invitado
 //
-const ConfigScreen = ({ navigation }) => {
+const ConfigScreen = ({ mainNavigation }) => {
   const [darkMode, setDarkMode] = useState(false);
   const [language, setLanguage] = useState("English");
   const { setUser, setIsLoggedIn } = useContext(ScreensContext);
   const [isHelpModalVisible, setIsHelpModalVisible] = useState(false);
+  
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
@@ -35,8 +39,9 @@ const ConfigScreen = ({ navigation }) => {
   const handleLogout = () => {
     setIsLoggedIn(false);
     setUser(null);
-    navigation.navigate("Login");
+    mainNavigation.navigate('Login');
   };
+  
 
   const closeHelpModal = () => {
     setIsHelpModalVisible(false);
@@ -70,9 +75,6 @@ const ConfigScreen = ({ navigation }) => {
         <Text style={styles.buttonText}>Help</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.buttonText}>Logout</Text>
-      </TouchableOpacity>
 
       {/* Modal para la pantalla de ayuda */}
       <Modal
@@ -120,11 +122,6 @@ const styles = StyleSheet.create({
   },
   switchLabel: {
     fontSize: 16,
-  },
-  logoutButton: {
-    backgroundColor: "#E74C3C",
-    borderRadius: 10,
-    padding: 10,
   },
 });
 

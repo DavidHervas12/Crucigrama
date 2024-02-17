@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -13,36 +13,105 @@ import {
   useFonts,
   RobotoMono_400Regular,
 } from "@expo-google-fonts/roboto-mono";
+import { createLists, addVideoToList } from "../services/services";
+import ScreensContext from "./ScreenContext";
 
-const AddVideoModal = ({
-  modalVisible,
-  onClose,
-  video,
-  availableLists,
-  onAddToExistingList,
-  onCreateNewList,
-}) => {
+// TODO crear una lista
+const AddVideoModal = ({ modalVisible, onClose, video, availableLists }) => {
   const [fontsLoaded] = useFonts({
     RobotoMono: RobotoMono_400Regular,
   });
+  const { user } = useContext(ScreensContext);
   const [newListName, setNewListName] = useState("");
-  const [modalVisibleNameInput, setModalVisibleNameInput] = useState(false);
+  const [isCreatingNewList, setIsCreatingNewList] = useState(false);
 
   const handleCreateNewList = () => {
-    setModalVisibleNameInput(true);
+    setIsCreatingNewList(true);
   };
 
-  const handleConfirmCreateNewList = () => {
-    onCreateNewList(newListName);
-    setModalVisibleNameInput(false);
-    setNewListName(""); // Limpiar el valor del TextInput
+  const handleConfirmCreateNewList = async () => {
+    let videoLink;
+    if (video.source === "YouTube") {
+      videoLink = `https://www.youtube.com/watch?v=${video.id}`;
+    } else if (video.source === "Vimeo") {
+      videoLink = `https://vimeo.com/${video.id}`;
+    } else if (video.source === "Dailymotion") {
+      videoLink = `https://www.dailymotion.com/video/${video.id}`;
+    }
+    try {
+      // Crear la nueva lista
+      const newListId = await createLists({
+        idUser: user.id,
+        title: newListName,
+        videos: [],
+        likes: 0,
+        dislikes: 0,
+      });
+      console.log("Nueva lista creada:", newListId);
+
+      // Agregar el video a la lista recién creada
+      const response = await addVideoToList({
+        title: video.title,
+        channel: video.channel,
+        link: videoLink,
+        thumbnail: video.image,
+        listId: newListId,
+      });
+      console.log("Video agregado a la lista:", response);
+
+      // Restablecer el estado
+      setIsCreatingNewList(false);
+      setNewListName("");
+      onClose();
+    } catch (error) {
+      console.error("Error al crear la lista o agregar el video:", error);
+      // Manejar el error, mostrar un mensaje al usuario, etc.
+    }
   };
+
+  const onAddToExistingList = async (selectedList) => {
+    let videoLink;
+    if (video.source === "YouTube") {
+      videoLink = `https://www.youtube.com/watch?v=${video.id}`;
+    } else if (video.source === "Vimeo") {
+      videoLink = `https://vimeo.com/${video.id}`;
+    } else if (video.source === "Dailymotion") {
+      videoLink = `https://www.dailymotion.com/video/${video.id}`;
+    }
+    try {
+      // Agregar el video a la lista existente
+      const response = await addVideoToList({
+        title: video.title,
+        channel: video.channel,
+        link: videoLink,
+        thumbnail: video.image,
+        listId: selectedList.id,
+      });
+      console.log("Video agregado a la lista existente:", response);
+
+      // Cerrar el modal
+      onClose();
+    } catch (error) {
+      console.error("Error al agregar el video a la lista existente:", error);
+      // Manejar el error, mostrar un mensaje al usuario, etc.
+    }
+  };
+
+  const renderUserListItem = ({ item, index }) => (
+    <TouchableOpacity
+      style={styles.listItemContainer}
+      onPress={() => onAddToExistingList(item)}
+    >
+      <View style={styles.listItemContent}>
+        <Text style={styles.listItemTitle}>{item.title}</Text>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <Modal visible={modalVisible} animationType="slide" transparent={false}>
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          {/* Botón para crear una nueva lista */}
           <TouchableOpacity
             style={styles.createNewListButton}
             onPress={handleCreateNewList}
@@ -51,26 +120,16 @@ const AddVideoModal = ({
               Crear Nueva Lista
             </Text>
           </TouchableOpacity>
-          {/* FlatList de elementos disponibles */}
           <FlatList
             data={availableLists}
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.modalListItem}
-                onPress={() => onAddToExistingList(item.id, video.id)}
-              >
-                <Text>{item.title}</Text>
-              </TouchableOpacity>
-            )}
+            renderItem={renderUserListItem}
           />
-          {/* Botón de Cerrar */}
           <TouchableOpacity style={styles.modalCloseButton} onPress={onClose}>
             <Text style={styles.closeButtonText}>Cerrar</Text>
           </TouchableOpacity>
-          {/* Modal para introducir el nombre de la nueva lista */}
           <Modal
-            visible={modalVisibleNameInput}
+            visible={isCreatingNewList}
             animationType="slide"
             transparent={true}
           >
@@ -86,7 +145,7 @@ const AddVideoModal = ({
                 <View style={styles.buttonContainer}>
                   <TouchableOpacity
                     style={styles.cancelButton}
-                    onPress={() => setModalVisibleNameInput(false)}
+                    onPress={() => setIsCreatingNewList(false)}
                   >
                     <Text style={styles.buttonText}>Cancelar</Text>
                   </TouchableOpacity>
@@ -117,15 +176,8 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     elevation: 5,
-    width: "100%", // Ancho del 100%
-    height: "100%", // Altura del 100%
-    fontFamily: "RobotoMono",
-  },
-  modalListItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "lightgray",
-    fontFamily: "RobotoMono",
+    width: "100%",
+    height: "100%",
   },
   createNewListButton: {
     padding: 10,
@@ -133,12 +185,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: "center",
     marginBottom: 10,
-    fontFamily: "RobotoMono",
   },
   createNewListButtonText: {
     color: "white",
     fontWeight: "bold",
-    fontFamily: "RobotoMono",
   },
   modalCloseButton: {
     marginTop: 20,
@@ -146,12 +196,10 @@ const styles = StyleSheet.create({
     backgroundColor: "red",
     borderRadius: 5,
     alignItems: "center",
-    fontFamily: "RobotoMono",
   },
   closeButtonText: {
     color: "white",
     fontWeight: "bold",
-    fontFamily: "RobotoMono",
   },
   input: {
     height: 40,
@@ -160,12 +208,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 10,
     paddingHorizontal: 10,
-    fontFamily: "RobotoMono",
   },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    fontFamily: "RobotoMono",
   },
   cancelButton: {
     backgroundColor: "red",
@@ -173,7 +219,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: "center",
     width: "45%",
-    fontFamily: "RobotoMono",
   },
   confirmButton: {
     backgroundColor: "#607FF8",
@@ -181,12 +226,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: "center",
     width: "45%",
-    fontFamily: "RobotoMono",
   },
   buttonText: {
     color: "white",
     fontWeight: "bold",
-    fontFamily: "RobotoMono",
   },
   popupContainer: {
     flex: 1,
@@ -205,7 +248,40 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 10,
-    fontFamily: "RobotoMono",
+  },
+  listItemContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "lightgray",
+    borderRadius: 5,
+    padding: 10,
+  },
+  listImagesContainer: {
+    marginRight: 10,
+  },
+  listItemImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 5,
+  },
+  listItemContent: {
+    flex: 1,
+  },
+  listItemTitle: {
+    fontWeight: "bold",
+    marginBottom: 5,
+  },
+  actionButtonsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  actionButton: {
+    marginRight: 5,
+  },
+  actionButtonText: {
+    marginLeft: 5,
   },
 });
 

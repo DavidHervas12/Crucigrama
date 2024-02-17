@@ -142,14 +142,9 @@ const LoginScreen = ({ navigation }) => {
       </View>
 
       {/* Modal para la pantalla de recuperación de contraseña */}
-      <Modal
-        visible={isModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={closeModal}
-      >
-        <PasswordScreen onCloseModal={closeModal} />
-      </Modal>
+
+        <PasswordScreen  onCloseModal={closeModal} isVisible={isModalVisible}/>
+
 
       {/* Modal para la pantalla de registro */}
       <Modal

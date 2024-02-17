@@ -86,42 +86,78 @@ export default function RegisterScreen({ onCloseModal }) {
       setPasswordError('');
     }
 
-    const userData = {
-      username: user,
-      password: password,
-      email: email,
-      savedLists: [],
-      profilePicture: image ? image : 'defaultProfilePicture', 
-      followers: 0, 
-    };
-
-    try {
-      await enviarDatos(userData);
-      Alert.alert(
-        'Account Created',
-        'Your account has been created successfully!',
-        [
-          {
-            text: 'OK',
-            onPress: () => onCloseModal(),
-          },
-        ]
-      );
-      console.log('Account creation successful');
-    } catch (error) {
-      console.error('Error during account creation:', error);
+    let imageBase64 = '';
+    if (image) {
+      const response = await fetch(image);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        imageBase64 = reader.result.split(',')[1];
+        const userData = {
+          username: user,
+          password: password,
+          email: email,
+          savedLists: [],
+          profilePicture: imageBase64,
+          followers: 0,
+        };
+        enviarDatos(userData)
+          .then(() => {
+            Alert.alert(
+              'Account Created',
+              'Your account has been created successfully!',
+              [
+                {
+                  text: 'OK',
+                  onPress: () => onCloseModal(),
+                },
+              ]
+            );
+            console.log('Account creation successful');
+          })
+          .catch((error) => {
+            console.error('Error during account creation:', error);
+          });
+      };
+      reader.readAsDataURL(blob);
+    } else {
+      const userData = {
+        username: user,
+        password: password,
+        email: email,
+        savedLists: [],
+        profilePicture: 'defaultProfilePicture',
+        followers: 0,
+      };
+      enviarDatos(userData)
+        .then(() => {
+          Alert.alert(
+            'Account Created',
+            'Your account has been created successfully!',
+            [
+              {
+                text: 'OK',
+                onPress: () => onCloseModal(),
+              },
+            ]
+          );
+          console.log('Account creation successful');
+        })
+        .catch((error) => {
+          console.error('Error during account creation:', error);
+        });
     }
   };
+
   return (
     <View style={styles.container}>
-      <View style={styles.part1}>
-      </View>
+      <View style={styles.part1}></View>
       <View style={styles.part2}>
         <View style={{ alignItems: 'center' }}>
-          <Image
-            source={image ? { uri: image } : defaultImage}
-            style={{ width: 110, height: 110 }}
-          />
+        <Image
+  source={{ uri: `data:image/png;base64,${image}` }}
+  style={{ width: 110, height: 110 }}
+/>
           <TouchableOpacity style={styles.imageContainer} onPress={pickImage}>
             <Feather name="plus" size={35} color="#607FF8" />
           </TouchableOpacity>
@@ -176,11 +212,8 @@ export default function RegisterScreen({ onCloseModal }) {
             <Text style={styles.buttonText}>Create Account</Text>
           </TouchableOpacity>
         </View>
-        {/* Nuevo botón para cerrar la pantalla modal */}
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={onCloseModal}>
+          <TouchableOpacity style={styles.closeButton} onPress={onCloseModal}>
             <Text style={styles.buttonText}>Close</Text>
           </TouchableOpacity>
         </View>
@@ -188,7 +221,6 @@ export default function RegisterScreen({ onCloseModal }) {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
