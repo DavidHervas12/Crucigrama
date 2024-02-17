@@ -114,23 +114,8 @@ export default function ModifyScreen({ onCloseModal, isVisible }) {
     }
   };
 
-  const convertImageToBase64 = async (imageUri) => {
-    const response = await fetch(imageUri);
-    const blob = await response.blob();
-    const base64String = await convertBlobToBase64(blob);
-    return base64String;
-  };
-
-  const convertBlobToBase64 = (blob) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = reject;
-      reader.onload = () => {
-        resolve(reader.result.split(",")[1]);
-      };
-      reader.readAsDataURL(blob);
-    });
-  };
+  const img64 = JSON.stringify(user.profilePicture);
+  const image64 = `data:image/jpg;base64,${img64}`;
 
   return (
     <Modal
@@ -144,7 +129,7 @@ export default function ModifyScreen({ onCloseModal, isVisible }) {
         <View style={styles.part2}>
           <View style={{ alignItems: "center" }}>
             <Image
-              source={{ uri: `data:image/jpg;base64,${user.profileImage}` }}
+              source={{ uri: `data:image/jpg;base64,${image64}` }}
               style={{ width: 110, height: 110 }}
             />
             <TouchableOpacity style={styles.imageContainer} onPress={pickImage}>

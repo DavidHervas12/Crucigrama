@@ -43,7 +43,6 @@ const LoginScreen = ({ navigation }) => {
       const userData = { username, password };
       const loginResponse = await iniciarSesion(userData);
       const objectResponse = JSON.parse(loginResponse);
-      console.log("Login successful:", loginResponse);
 
       setUser(objectResponse);
       setIsLoggedIn(true);

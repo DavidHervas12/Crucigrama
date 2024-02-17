@@ -149,13 +149,15 @@ export default function RegisterScreen({ onCloseModal }) {
     }
   };
 
+  const img64 = JSON.stringify(user.profilePicture);
+  const image64 = `data:image/jpg;base64,${img64}`;
   return (
     <View style={styles.container}>
       <View style={styles.part1}></View>
       <View style={styles.part2}>
         <View style={{ alignItems: 'center' }}>
         <Image
-  source={{ uri: `data:image/png;base64,${image}` }}
+  source={{ uri: `data:image/png;base64,${image64}` }}
   style={{ width: 110, height: 110 }}
 />
           <TouchableOpacity style={styles.imageContainer} onPress={pickImage}>

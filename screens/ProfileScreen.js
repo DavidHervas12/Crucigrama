@@ -13,6 +13,7 @@ import ScreensContext from "./ScreenContext";
 import ListCreateModal from "./ListCreateModal";
 import ListSaveModal from "./ListSaveModal";
 import { getUserLists, getUserSaveLists } from "../services/services";
+import { FileSystem } from 'react-native-gesture-handler';
 
 const ProfileScreen = () => {
   const { user, isLoggedIn } = useContext(ScreensContext);
@@ -76,10 +77,14 @@ const ProfileScreen = () => {
     setModalListCreateVisible(false);
   };
 
+
+  const img64 = JSON.stringify(user.profilePicture);
+  const image64 = `data:image/jpg;base64,${img64}`;
+
   return isLoggedIn ? (
     <View style={styles.container}>
 <Image
-  source={user.profileImage ? { uri: `data:image/png;base64,${user.profileImage}` } : require("../assets/UserIcon.png")}
+  source={{ uri: image64}}
   style={styles.profileImage}
 />
       <View style={styles.userInfoContainer}>
@@ -98,7 +103,7 @@ const ProfileScreen = () => {
             renderItem={({ item }) => (
               <TouchableOpacity onPress={() => openListCreadasModal(item)}>
                 <View style={styles.listItemContainer}>
-                <Image source={item.videos && item.videos[0] && item.video[0].thumbnail ? { uri: item.video[0].thumbnail } : require('../assets/videoThumbnail.png')} style={styles.listImage} />
+                <Image source={item.videos && item.videos[0] && item.videos[0].thumbnail ? { uri: item.videos[0].thumbnail } : require('../assets/videoThumbnail.png')} style={styles.listImage} />
                   <Text style={styles.listName}>{item.name}</Text>
                 </View>
               </TouchableOpacity>
@@ -116,7 +121,7 @@ const ProfileScreen = () => {
             renderItem={({ item }) => (
               <TouchableOpacity onPress={() => openListGuardadasModal(item)}>
                 <View style={styles.listItemContainer}>
-                  <Image source={item.video && item.video[0] && item.video[0].thumbnail ? { uri: item.video[0].thumbnail } : require('../assets/videoThumbnail.png')} style={styles.listImage} />
+                  <Image source={item.videos && item.videos[0] && item.videos[0].thumbnail ? { uri: item.videos[0].thumbnail } : require('../assets/videoThumbnail.png')} style={styles.listImage} />
                   <Text style={styles.listName}>{item.name}</Text>
                 </View>
               </TouchableOpacity>

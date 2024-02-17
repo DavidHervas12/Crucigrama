@@ -89,7 +89,7 @@ const actualizarUsuario = async (datosActualizados) => {
       }
     );
 
-    const responseData = await response.json();
+    const responseData = await response.text();
     console.log("Usuario actualizado:", responseData);
     console.log(response);
   } catch (error) {
@@ -202,14 +202,13 @@ const addVideoToList = async (video) => {
 };
 
 const getUserLists = async (userId) => {
-  console.log(userId);
   try {
     const response = await fetch(
       `http://3.217.102.239:8080/OmniStream/getUserLists?id=${userId}`
     );
-    const responseData = await response.json();
-    console.log("Listas encontradas:", responseData);
-    return responseData;
+    const responseJSON = await response.json();
+    console.log("Listas encontradas:", responseJSON);
+    return responseJSON;
   } catch (error) {
     console.error("Error al buscar listas:", error);
     throw error;
@@ -217,13 +216,12 @@ const getUserLists = async (userId) => {
 };
 
 const getUserSaveLists = async (userId) => {
-  console.log(userId);
   try {
     const response = await fetch(
       `http://3.217.102.239:8080/OmniStream/getSavedLists?id=${userId}`
     );
     const responseData = await response.json();
-    console.log("Listas encontradas:", responseData);
+    console.log("Listas encontradas:", responseData[0].videos); 
     return responseData;
   } catch (error) {
     console.error("Error al buscar listas:", error);
@@ -237,7 +235,7 @@ const getVideoLists = async (listId) => {
       `http://3.217.102.239:8080/OmniStream/getVideosInList?id=${listId}`
     );
     const responseData = await response.json();
-    console.log("Videos encontrados:", responseData);
+    console.log("Videos encontrados:", responseData[0].videos);
     return responseData;
   } catch (error) {
     console.error("Error al buscar listas:", error);
@@ -293,7 +291,7 @@ const SaveList = async (userId, listId) => {
       }
     );
 
-    const responseData = await response.json();
+    const responseData = await response.text();
     console.log("Lista guardar:", responseData);
     console.log(response);
   } catch (error) {
